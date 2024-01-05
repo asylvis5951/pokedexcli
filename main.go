@@ -1,9 +1,14 @@
 package main
 
 import (
-	pokeapi "github.com/asylvis5951/pokeapi"
+	pokecache "github.com/asylvis5951/pokedexcli/internal/pokecache"
+	pokedex "github.com/asylvis5951/pokedexcli/internal/pokedex"
+	"time"
 )
 
 func main() {
-	startRepl()
+	pokedex := pokedex.NewPokedex()
+	cfg := &config{}
+	cache := pokecache.NewCache(30 * time.Second)
+	startRepl(cfg, cache, pokedex)
 }

@@ -4,12 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
+
+	pokecache "github.com/asylvis5951/pokedexcli/internal/pokecache"
+	pokedex "github.com/asylvis5951/pokedexcli/internal/pokedex"
 )
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config, *pokecache.Cache, *pokedex.Pdex, string) error
 }
 
 type config struct {
@@ -21,12 +25,12 @@ func printRepl() {
 	fmt.Print("pokedexcli> ")
 }
 
-func commandExit() error {
+func commandExit(cfg *config, cache *pokecache.Cache, p *pokedex.Pdex, s string) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp() error {
+func commandHelp(cfg *config, cache *pokecache.Cache, p *pokedex.Pdex, s string) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("")
 	fmt.Println("Usage:")
@@ -52,23 +56,50 @@ func getCommands() map[string]cliCommand {
 		"map": {
 			name:        "map",
 			description: "Displays names of 20 location areas in Pokemon world",
-			callback:    commandMap,
+			callback:    commandMapf,
 		},
-		// "mapb": {
-		// 	name:        "mapb",
-		// 	description: "Displays previous 20 location areas in Pokemon world",
-		// 	callback:    commandMapb,
-		// },
+		"mapb": {
+			name:        "mapb",
+			description: "Displays previous 20 location areas in Pokemon world",
+			callback:    commandMapb,
+		},
+		"explore": {
+			name:        "explore",
+			description: "Displays information about a location-area",
+			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Attempts to catch specified pokemon.  Ex. catch pikachu",
+			callback:    commandCatch,
+		},
+		"inspect": {
+			name:	"inspect",
+			description: "Displays entry for pokemon in Pokedex, if it exists",
+			callback: commandInspect,
+		},
+		"pokedex": {
+			name: "pokedex",
+			description: "Displays pokemon in pokedex",
+			callback: commandPdex,
+		},
 	}
 }
 
-func StartRepl() {
+func startRepl(cfg *config, cache *pokecache.Cache, pokedex *pokedex.Pdex) {
 	scanner := bufio.NewScanner(os.Stdin)
 	printRepl()
 	for scanner.Scan() {
 		i := scanner.Text()
-		if c, ok := getCommands()[i]; ok {
-			c.callback()
+		slc := strings.Split(i, " ")
+		if len(slc) > 1 {
+			if c, ok := getCommands()[slc[0]]; ok {
+				c.callback(cfg, cache, pokedex, slc[1])
+			}
+		} else {
+			if c, ok := getCommands()[slc[0]]; ok {
+				c.callback(cfg, cache, pokedex, slc[0])
+			}
 		}
 		printRepl()
 	}
